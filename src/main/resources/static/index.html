@@ -1,9 +1,12 @@
 <html>
 <body>
-<form method="POST" enctype="multipart/form-data"
-      action="files/upload">
-    File to upload: <input type="file" name="file"><br /> Name: <input
-        type="text" name="name"><br /> <br /> <input type="submit" value="file"> Press here to upload the file!
-</form>
+<div>
+    <span>Two methods implemented:</span>
+    <br><br>
+    <ui>
+        <li>/files/upload - need MultipartFile as param</li>
+        <li>/files/get/{filename} - need filename for download</li>
+    </ui>
+</div>
 </body>
 </html>
