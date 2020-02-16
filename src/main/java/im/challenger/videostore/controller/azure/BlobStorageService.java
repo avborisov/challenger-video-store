@@ -20,11 +20,11 @@ public class BlobStorageService {
     @Autowired
     private CloudBlobContainer blobContainer;
 
-    public URI upload(MultipartFile multipartFile) throws URISyntaxException, StorageException, IOException {
+    public String upload(MultipartFile multipartFile) throws URISyntaxException, StorageException, IOException {
         String newFileName = getNewFileName(multipartFile);
         CloudBlockBlob blob = blobContainer.getBlockBlobReference(newFileName);
         blob.upload(multipartFile.getInputStream(), -1);
-        return URI.create("http://localhost:8080/files/get/" + newFileName);
+        return newFileName;
     }
 
     public URI getBlobUri(String filename) throws URISyntaxException, StorageException {
