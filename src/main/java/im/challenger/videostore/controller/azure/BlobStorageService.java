@@ -24,7 +24,7 @@ public class BlobStorageService {
         String newFileName = getNewFileName(multipartFile);
         CloudBlockBlob blob = blobContainer.getBlockBlobReference(newFileName);
         blob.upload(multipartFile.getInputStream(), -1);
-        return blob.getUri();
+        return URI.create("http://localhost:8080/files/get/" + newFileName);
     }
 
     public URI getBlobUri(String filename) throws URISyntaxException, StorageException {
