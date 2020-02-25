@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -25,7 +26,7 @@ public class VideoStoreController {
     BlobStorageService blobService;
 
     @PostMapping(value = "/files/upload")
-    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader Map<String, String> headers) {
         try {
             return ResponseEntity.ok(blobService.upload(file));
         } catch (StorageException | URISyntaxException | IOException e) {
@@ -37,11 +38,11 @@ public class VideoStoreController {
     }
 
     @GetMapping("/files/get/{filename}")
-    public ResponseEntity downloadFile(@PathVariable String filename) {
+    public ResponseEntity downloadFile(@PathVariable String filename, @RequestHeader Map<String, String> headers) {
         try {
             URI blobUri = blobService.getBlobUri(filename);
             UrlResource video = new UrlResource(blobUri);
-            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+            return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaTypeFactory
                             .getMediaType(video)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM))
