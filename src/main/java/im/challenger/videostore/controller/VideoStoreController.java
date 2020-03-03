@@ -1,19 +1,14 @@
 package im.challenger.videostore.controller;
 
-import com.microsoft.azure.storage.StorageException;
 import im.challenger.videostore.controller.fs.FileSystemStorageService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.servlet.MultipartConfigFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.MultipartConfigElement;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 @RestController
@@ -21,9 +16,12 @@ import java.util.Map;
 public class VideoStoreController {
 
     @PostMapping(value = "/files/upload")
-    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader Map<String, String> headers) {
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers) {
         try {
-            return ResponseEntity.ok(FileSystemStorageService.upload(file));
+            log.info("Try to upload file with original name: {}\n\nheaders: \n{}", file.getOriginalFilename(), headers.toString());
+            String uploadedFileName = FileSystemStorageService.upload(file);
+            log.info("File uploaded successfully, new file name: {}", uploadedFileName);
+            return ResponseEntity.ok(uploadedFileName);
         } catch (IOException e) {
             log.error("Can't upload file", e);
         }
@@ -35,6 +33,7 @@ public class VideoStoreController {
     @GetMapping("/files/get/{filename}")
     public ResponseEntity<ResourceRegion> downloadFile(@PathVariable String filename, @RequestHeader HttpHeaders headers) {
         try {
+            log.info("Try to download file with name: {}\n\nheaders: \n{}", filename, headers.toString());
             UrlResource video = new UrlResource(String.format("file:%s/%s", FileSystemStorageService.FILE_STORAGE_PATH, filename));
             ResourceRegion region = FileSystemStorageService.resourceRegion(video, headers);
             return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)

@@ -25,11 +25,10 @@ public class FileSystemStorageService {
         if (range != null) {
             long start = range.getRangeStart(contentLength);
             long end = range.getRangeEnd(contentLength);
-            long rangeLength = Math.min(1 * 1024 * 1024, end - start + 1);
+            long rangeLength = end - start + 1;
             return new ResourceRegion(video, start, rangeLength);
         } else {
-            long rangeLength = Math.min(1 * 1024 * 1024, contentLength);
-            return new ResourceRegion(video, 0, rangeLength);
+            return new ResourceRegion(video, 0, contentLength);
         }
     }
 
