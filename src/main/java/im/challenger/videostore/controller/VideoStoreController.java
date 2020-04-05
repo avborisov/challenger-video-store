@@ -11,21 +11,25 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Slf4j
 public class VideoStoreController {
 
     @PostMapping(value = "/files/upload")
+
     public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers) {
         try {
             String auth = headers.getFirst(HttpHeaders.AUTHORIZATION);
+            log.info("Try to upload file with original name: {}\n\nheaders: \n{}", file.getOriginalFilename(), headers.toString());
             if (auth == null) {
+                log.info("Unauthorized access error");
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Unauthorized access error");
             } else {
                 // TODO: check token
             }
-            log.info("Try to upload file with original name: {}\n\nheaders: \n{}", file.getOriginalFilename(), headers.toString());
+
             String uploadedFileName = FileSystemStorageService.upload(file);
             log.info("File uploaded successfully, new file name: {}", uploadedFileName);
             return ResponseEntity.ok(uploadedFileName);
