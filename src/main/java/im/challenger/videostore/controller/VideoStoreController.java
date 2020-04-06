@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -20,14 +22,13 @@ public class VideoStoreController {
     public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers) {
         try {
             String auth = headers.getFirst(HttpHeaders.AUTHORIZATION);
-            log.info("Try to upload file with original name: {}\n\nheaders: \n{}", file.getOriginalFilename(), headers.toString());
-            if (auth == null) {
-                log.info("Unauthorized access error");
+            log.info("Try to upload file with original name: {}\nheaders: {}\n", file.getOriginalFilename(), headers.toString());
+
+            if (auth == null || !isAuthTokenValid(auth)) {
+                log.warn("Unauthorized access error");
                 return ResponseEntity
                         .status(HttpStatus.UNAUTHORIZED)
                         .body("Unauthorized access error");
-            } else {
-                // TODO: check token
             }
 
             String uploadedFileName = FileSystemStorageService.upload(file);
@@ -44,7 +45,7 @@ public class VideoStoreController {
     @GetMapping("/files/get/{filename}")
     public ResponseEntity<ResourceRegion> downloadFile(@PathVariable String filename, @RequestHeader HttpHeaders headers) {
         try {
-            log.info("Try to download file with name: {}\n\nheaders: \n{}", filename, headers.toString());
+            log.info("Try to download file with name: {}\nheaders: {}\n", filename, headers.toString());
             UrlResource video = new UrlResource(String.format("file:%s/%s", FileSystemStorageService.FILE_STORAGE_PATH, filename));
             ResourceRegion region = FileSystemStorageService.resourceRegion(video, headers);
             return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
@@ -56,6 +57,19 @@ public class VideoStoreController {
             log.error("Can't get file", e);
             return null;
         }
+    }
+
+    private boolean isAuthTokenValid(String auth) throws IOException {
+        URL url = new URL("https://challenger.im/backend/user/isTokenValid");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestProperty (HttpHeaders.AUTHORIZATION, auth);
+        con.setRequestMethod("GET");
+        con.setConnectTimeout(5000);
+        con.setReadTimeout(5000);
+        int responseCode = con.getResponseCode();
+        log.info("isTokenValid token response code: {}", responseCode);
+        con.disconnect();
+        return HttpStatus.OK.value() == responseCode;
     }
 
 }
