@@ -1,10 +1,15 @@
 package im.challenger.videostore;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import im.challenger.videostore.controller.fs.FileSystemStorageService;
+import im.challenger.videostore.controller.fs.IStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,32 +17,35 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.unit.DataSize;
 
 import javax.servlet.MultipartConfigElement;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
 
 @Configuration
 public class BeanConfig {
 
     @Autowired
-    private Environment environment;
+    private Environment env;
 
     @Bean
-    public CloudBlobClient cloudBlobClient() throws URISyntaxException, InvalidKeyException {
-        CloudStorageAccount storageAccount = CloudStorageAccount.parse(environment.getProperty("azure.storage.ConnectionString"));
-        return storageAccount.createCloudBlobClient();
-    }
-
-    @Bean
-    public CloudBlobContainer videosBlobContainer() throws URISyntaxException, InvalidKeyException, StorageException {
-        return cloudBlobClient().getContainerReference(environment.getProperty("azure.storage.container.name"));
+    public AmazonS3 amazonS3Client() {
+        AWSCredentials credentials = new BasicAWSCredentials(env.getProperty("aws.access.key"), env.getProperty("aws.secret.key"));
+        return AmazonS3ClientBuilder
+                .standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(Regions.EU_CENTRAL_1)
+                .build();
     }
 
     @Bean
     public MultipartConfigElement multipartConfigElement() {
         MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(DataSize.ofMegabytes(100));
-        factory.setMaxRequestSize(DataSize.ofMegabytes(100));
+        factory.setMaxFileSize(DataSize.ofMegabytes(200));
+        factory.setMaxRequestSize(DataSize.ofMegabytes(200));
+        factory.setLocation("/opt/challenger/tmp");
         return factory.createMultipartConfig();
+    }
+
+    @Bean
+    public IStorageService storageService() {
+        return new FileSystemStorageService();
     }
 
 }

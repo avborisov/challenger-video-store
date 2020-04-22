@@ -1,35 +1,39 @@
 package im.challenger.videostore.controller;
 
-import com.microsoft.azure.storage.StorageException;
-import im.challenger.videostore.controller.azure.BlobStorageService;
+import im.challenger.videostore.controller.fs.IStorageService;
+import im.challenger.videostore.core.AuthApiTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.support.ResourceRegion;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-
 @RestController
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Slf4j
 public class VideoStoreController {
 
     @Autowired
-    BlobStorageService blobService;
+    private IStorageService storageService;
 
     @PostMapping(value = "/files/upload")
-    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader Map<String, String> headers) {
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file, @RequestHeader HttpHeaders headers) {
         try {
-            return ResponseEntity.ok(blobService.upload(file));
-        } catch (StorageException | URISyntaxException | IOException e) {
+            String auth = headers.getFirst(HttpHeaders.AUTHORIZATION);
+            log.info("Try to upload file with original name: {}\nheaders: {}\n", file.getOriginalFilename(), headers.toString());
+
+            if (auth == null || !AuthApiTools.isAuthTokenValid(auth)) {
+                log.warn("Unauthorized access error");
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Unauthorized access error");
+            }
+
+            String uploadedFileName = storageService.upload(file);
+            log.info("File uploaded successfully, new file name: {}", uploadedFileName);
+            return ResponseEntity.ok(uploadedFileName);
+        } catch (Exception e) {
             log.error("Can't upload file", e);
         }
         return ResponseEntity
@@ -38,22 +42,19 @@ public class VideoStoreController {
     }
 
     @GetMapping("/files/get/{filename}")
-    public ResponseEntity downloadFile(@PathVariable String filename, @RequestHeader Map<String, String> headers) {
+    public ResponseEntity<ResourceRegion> downloadFile(@PathVariable String filename, @RequestHeader HttpHeaders headers) {
         try {
-            URI blobUri = blobService.getBlobUri(filename);
-            UrlResource video = new UrlResource(blobUri);
-            return ResponseEntity.status(HttpStatus.OK)
+            log.info("Try to download file with name: {}\nheaders: {}\n", filename, headers.toString());
+            ResourceRegion region = storageService.download(filename, headers);
+            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
                     .contentType(MediaTypeFactory
-                            .getMediaType(video)
+                            .getMediaType(filename)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM))
-                    .body(video);
-        } catch (URISyntaxException | StorageException | MalformedURLException e) {
-            log.error("Can't upload file", e);
+                    .body(region);
+        } catch (Exception e) {
+            log.error("Can't get file", e);
+            return null;
         }
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Can't download file, internal server error");
-
     }
 
 }
