@@ -1,21 +1,18 @@
 package im.challenger.videostore.controller.fs;
 
 import com.google.common.io.Files;
-import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 public class FileSystemStorageService implements IStorageService {
 
@@ -44,12 +41,6 @@ public class FileSystemStorageService implements IStorageService {
         byte[] bytes = multipartFile.getBytes();
         Files.write(bytes, filepath.toFile());
         return newFileName;
-    }
-
-    private static String getNewFileName(@NonNull MultipartFile multipartFile) {
-        String extension = StringUtils.getFilenameExtension(multipartFile.getOriginalFilename());
-        String randomNamePart = UUID.randomUUID().toString();
-        return extension.isEmpty() ? randomNamePart : randomNamePart + "." + extension;
     }
 
 }

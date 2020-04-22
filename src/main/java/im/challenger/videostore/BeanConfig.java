@@ -6,6 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import im.challenger.videostore.controller.fs.AwsS3StorageService;
 import im.challenger.videostore.controller.fs.FileSystemStorageService;
 import im.challenger.videostore.controller.fs.IStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,8 @@ public class BeanConfig {
 
     @Bean
     public IStorageService storageService() {
-        return new FileSystemStorageService();
+        return new AwsS3StorageService();
+        // return new FileSystemStorageService();
     }
 
 }

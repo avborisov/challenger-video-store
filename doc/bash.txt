@@ -4,3 +4,4 @@ ps -ef|grep <process_name>
 
 kill -9 <thepid>
 
+sudo tail -f /opt/challenger/server/app.log
