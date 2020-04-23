@@ -1,52 +1,34 @@
 package im.challenger.videostore.controller.fs;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.util.IOUtils;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRange;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import javax.naming.OperationNotSupportedException;
+import javax.servlet.http.HttpServletRequest;
+import java.net.URL;
 
 @Slf4j
 public class AwsS3StorageService implements IStorageService {
 
     @Autowired
-    private AmazonS3 amazonS3Client;
-
-    @Autowired
     ResourceLoader resourceLoader;
-
+    @Autowired
+    private AmazonS3 amazonS3Client;
     @Value("${aws.bucket.name}")
     private String bucketName;
 
     @Override
     public ResourceRegion download(String filename, HttpHeaders headers) throws Exception {
-        S3Object fullContent = amazonS3Client.getObject(bucketName, filename);
-        long contentLength = fullContent.getObjectMetadata().getContentLength();
-        List<HttpRange> ranges = headers.getRange();
-        HttpRange range = ranges.stream().findFirst().orElse(null);
-
-        byte[] content = StreamUtils.copyToByteArray(fullContent.getObjectContent());
-        if (range == null) {
-            return new ResourceRegion(new ByteArrayResource(content), 0, contentLength);
-        }
-
-        long start = range.getRangeStart(contentLength);
-        long end = range.getRangeEnd(contentLength);
-        long rangeLength = end - start + 1;
-
-        return new ResourceRegion(new ByteArrayResource(content), start, rangeLength);
+        throw new OperationNotSupportedException("Download directly from S3 service");
     }
 
     @Override
@@ -55,12 +37,13 @@ public class AwsS3StorageService implements IStorageService {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(multipartFile.getContentType());
         metadata.setContentLength(multipartFile.getSize());
-        amazonS3Client.putObject(
+        PutObjectRequest putObjectRequest = new PutObjectRequest(
                 bucketName,
                 newFileName,
                 multipartFile.getInputStream(),
-                metadata
-        );
-        return newFileName;
+                metadata).withCannedAcl(CannedAccessControlList.PublicRead);
+        amazonS3Client.putObject(putObjectRequest);
+        URL uploadedFileURL = amazonS3Client.getUrl(bucketName, newFileName);
+        return uploadedFileURL.toString();
     }
 }

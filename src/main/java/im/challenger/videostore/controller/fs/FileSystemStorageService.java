@@ -9,7 +9,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -40,7 +42,7 @@ public class FileSystemStorageService implements IStorageService {
         Path filepath = Paths.get(storagePath, newFileName);
         byte[] bytes = multipartFile.getBytes();
         Files.write(bytes, filepath.toFile());
-        return newFileName;
+        return env.getProperty("server.url") + "/files/get/" + newFileName;
     }
 
 }
