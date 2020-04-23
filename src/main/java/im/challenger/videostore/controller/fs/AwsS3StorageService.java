@@ -38,6 +38,9 @@ public class AwsS3StorageService implements IStorageService {
         HttpRange range = ranges.stream().findFirst().orElse(null);
 
         byte[] content = StreamUtils.copyToByteArray(fullContent.getObjectContent());
+        if (range == null) {
+            return new ResourceRegion(new ByteArrayResource(content), 0, contentLength);
+        }
 
         long start = range.getRangeStart(contentLength);
         long end = range.getRangeEnd(contentLength);
