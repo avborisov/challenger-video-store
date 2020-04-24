@@ -6,8 +6,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.URL;
 import java.util.UUID;
 
 public interface IStorageService {
@@ -27,6 +25,18 @@ public interface IStorageService {
      */
     String upload(MultipartFile multipartFile) throws Exception;
 
+    /**
+     * check if object exists in current storage
+     * @param filename
+     * @return
+     */
+    boolean doesObjectExist(String filename);
+
+    /**
+     * Unique name generator
+     * @param multipartFile
+     * @return
+     */
     default String getNewFileName(@NonNull MultipartFile multipartFile) {
         String extension = StringUtils.getFilenameExtension(multipartFile.getOriginalFilename());
         String randomNamePart = UUID.randomUUID().toString();

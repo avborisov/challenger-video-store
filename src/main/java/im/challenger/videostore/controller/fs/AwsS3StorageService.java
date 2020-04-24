@@ -13,7 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.OperationNotSupportedException;
-import javax.servlet.http.HttpServletRequest;
 import java.net.URL;
 
 @Slf4j
@@ -45,5 +44,10 @@ public class AwsS3StorageService implements IStorageService {
         amazonS3Client.putObject(putObjectRequest);
         URL uploadedFileURL = amazonS3Client.getUrl(bucketName, newFileName);
         return uploadedFileURL.toString();
+    }
+
+    @Override
+    public boolean doesObjectExist(String filename) {
+        return amazonS3Client.doesObjectExist(bucketName, filename);
     }
 }

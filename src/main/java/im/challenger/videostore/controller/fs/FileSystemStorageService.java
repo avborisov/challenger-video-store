@@ -9,9 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -21,6 +19,7 @@ public class FileSystemStorageService implements IStorageService {
     @Autowired
     private Environment env;
 
+    @Override
     public ResourceRegion download(String filename, HttpHeaders headers) throws IOException {
         UrlResource video = new UrlResource(String.format("file:%s/%s", env.getProperty("fs.path"), filename));
         long contentLength = video.contentLength();
@@ -36,6 +35,7 @@ public class FileSystemStorageService implements IStorageService {
         }
     }
 
+    @Override
     public String upload(MultipartFile multipartFile) throws IOException {
         String newFileName = getNewFileName(multipartFile);
         String storagePath = env.getProperty("fs.path");
@@ -45,4 +45,9 @@ public class FileSystemStorageService implements IStorageService {
         return env.getProperty("server.url") + "/files/get/" + newFileName;
     }
 
+    @Override
+    public boolean doesObjectExist(String filename) {
+        Path file = Paths.get(env.getProperty("fs.path"), filename);
+        return java.nio.file.Files.exists(file);
+    }
 }
