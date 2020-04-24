@@ -26,11 +26,6 @@ public class AwsS3StorageService implements IStorageService {
     private String bucketName;
 
     @Override
-    public ResourceRegion download(String filename, HttpHeaders headers) throws Exception {
-        throw new OperationNotSupportedException("Download directly from S3 service");
-    }
-
-    @Override
     public String upload(MultipartFile multipartFile) throws Exception {
         String newFileName = getNewFileName(multipartFile);
         ObjectMetadata metadata = new ObjectMetadata();
@@ -47,7 +42,12 @@ public class AwsS3StorageService implements IStorageService {
     }
 
     @Override
-    public boolean doesObjectExist(String filename) {
-        return amazonS3Client.doesObjectExist(bucketName, filename);
+    public ResourceRegion download(String filename, HttpHeaders headers) throws Exception {
+        throw new OperationNotSupportedException("Download directly from S3 service");
+    }
+
+    @Override
+    public boolean doesObjectExist(String filename) throws OperationNotSupportedException {
+        throw new OperationNotSupportedException("Download directly from S3 service");
     }
 }

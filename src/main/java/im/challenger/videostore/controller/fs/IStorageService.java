@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.naming.OperationNotSupportedException;
 import java.util.UUID;
 
 public interface IStorageService {
@@ -30,7 +31,7 @@ public interface IStorageService {
      * @param filename
      * @return
      */
-    boolean doesObjectExist(String filename);
+    boolean doesObjectExist(String filename) throws Exception;
 
     /**
      * Unique name generator

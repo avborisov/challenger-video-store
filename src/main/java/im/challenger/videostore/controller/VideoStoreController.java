@@ -42,13 +42,12 @@ public class VideoStoreController {
 
     @GetMapping("/files/get/{filename}")
     public ResponseEntity downloadFile(@PathVariable String filename, @RequestHeader HttpHeaders headers) {
-        if (!storageService.doesObjectExist(filename)) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(String.format("File with name %s not found in storage", filename));
-        }
-
         try {
+            if (!storageService.doesObjectExist(filename)) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(String.format("File with name %s not found in storage", filename));
+            }
             ResourceRegion region = storageService.download(filename, headers);
             return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
                     .contentType(MediaTypeFactory
