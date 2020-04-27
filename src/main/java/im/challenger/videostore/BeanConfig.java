@@ -40,7 +40,7 @@ public class BeanConfig {
         MultipartConfigFactory factory = new MultipartConfigFactory();
         factory.setMaxFileSize(DataSize.ofMegabytes(200));
         factory.setMaxRequestSize(DataSize.ofMegabytes(200));
-        factory.setLocation("/opt/challenger/tmp");
+         factory.setLocation(env.getProperty("fs.temp"));
         return factory.createMultipartConfig();
     }
 
